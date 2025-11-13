@@ -4,29 +4,32 @@ import pkg from 'pg';
 const { Pool } = pkg;
 
 const app = express();
-const PORT = process.env.PORT || 5000; // Port din Render sau fallback local
+const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000', // frontend Vercel sau local
-  methods: ['GET','POST','PUT','DELETE'],
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000', // acceptă cereri de la Vercel sau local
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  })
+);
 app.use(express.json());
 
-// PostgreSQL connection - variabile de mediu pentru cloud
+// PostgreSQL connection (Supabase sau local)
 const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
   host: process.env.DB_HOST || 'localhost',
   database: process.env.DB_DATABASE || 'DailyTaskTrackerDB',
   password: process.env.DB_PASSWORD || '12345',
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5434,
+  ssl: process.env.DB_HOST ? { rejectUnauthorized: false } : false, // 🔥 necesar pentru Supabase
 });
 
 // ---------------------- Routes ----------------------
 
 // Root route for testing
 app.get('/', (req, res) => {
-  res.send('Backend is running!');
+  res.send('✅ Backend is live and connected!');
 });
 
 // Get all tasks
@@ -35,7 +38,7 @@ app.get('/tasks', async (req, res) => {
     const result = await pool.query('SELECT * FROM tasks ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (err) {
-    console.error(err.message);
+    console.error('❌ Database error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -50,7 +53,7 @@ app.post('/tasks', async (req, res) => {
     );
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err.message);
+    console.error('❌ Insert error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -60,13 +63,13 @@ app.put('/tasks/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const result = await pool.query(
-      'UPDATE tasks SET status=$1 WHERE id=$2 RETURNING *',
-      [status, id]
-    );
+    const result = await pool.query('UPDATE tasks SET status=$1 WHERE id=$2 RETURNING *', [
+      status,
+      id,
+    ]);
     res.json(result.rows[0]);
   } catch (err) {
-    console.error(err.message);
+    console.error('❌ Update error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -78,13 +81,14 @@ app.delete('/tasks/:id', async (req, res) => {
     await pool.query('DELETE FROM tasks WHERE id=$1', [id]);
     res.json({ message: 'Task deleted' });
   } catch (err) {
-    console.error(err.message);
+    console.error('❌ Delete error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
 // ---------------------------------------------------
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Start server (Render sau local)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });
