@@ -13,8 +13,8 @@ app.use(express.json());
 
 // Supabase client
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
+  process.env.//tqcokcqxmqfmomftnmzf.supabase.co,
+  process.env.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxY29rY3F4bXFmbW9tZnRubXpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTQxMDMsImV4cCI6MjA3ODUzMDEwM30.Szrei6ph58kSSs_j0MmdlGw7ZzNla17nZp-_W1g8CK0
 );
 
 // Rute API
