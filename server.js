@@ -6,26 +6,21 @@ const { Pool } = pkg;
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000', // acceptă cereri de la Vercel
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  })
-);
+// Middleware CORS
+app.use(cors()); // Acceptă toate originile (temporar, pentru teste)
 app.use(express.json());
 
-// PostgreSQL connection (Supabase sau local)
+// PostgreSQL/Supabase connection
 const pool = new Pool({
   user: process.env.DB_USER || 'postgres',
   host: process.env.DB_HOST || 'localhost',
   database: process.env.DB_DATABASE || 'DailyTaskTrackerDB',
   password: process.env.DB_PASSWORD || '12345',
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
-  ssl: process.env.DB_HOST ? { rejectUnauthorized: false } : false, // necesar pentru Supabase
+  ssl: process.env.DB_HOST ? { rejectUnauthorized: false } : false,
 });
 
-// ---------------------- Routes ----------------------
+// ---------------- Routes ----------------
 
 // Test root
 app.get('/', (req, res) => res.send('✅ Backend is live!'));
@@ -34,14 +29,15 @@ app.get('/', (req, res) => res.send('✅ Backend is live!'));
 app.get('/tasks', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM tasks ORDER BY created_at DESC');
+    console.log('Fetched tasks:', result.rows); // Debug
     res.json(result.rows);
   } catch (err) {
-    console.error('❌ Database error:', err.message);
+    console.error('Database error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Add new task
+// Add task
 app.post('/tasks', async (req, res) => {
   try {
     const { title, description, due_date } = req.body;
@@ -51,7 +47,7 @@ app.post('/tasks', async (req, res) => {
     );
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('❌ Insert error:', err.message);
+    console.error('Insert error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -67,7 +63,7 @@ app.put('/tasks/:id', async (req, res) => {
     ]);
     res.json(result.rows[0]);
   } catch (err) {
-    console.error('❌ Update error:', err.message);
+    console.error('Update error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -79,7 +75,7 @@ app.delete('/tasks/:id', async (req, res) => {
     await pool.query('DELETE FROM tasks WHERE id=$1', [id]);
     res.json({ message: 'Task deleted' });
   } catch (err) {
-    console.error('❌ Delete error:', err.message);
+    console.error('Delete error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
