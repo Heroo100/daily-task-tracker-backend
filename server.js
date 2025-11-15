@@ -9,7 +9,6 @@ dotenv.config();
 
 const app = express();
 
-// Configurare CORS mai detaliată
 app.use(cors({
   origin: process.env.FRONTEND_URL || '*',
   credentials: true
@@ -17,7 +16,6 @@ app.use(cors({
 
 app.use(express.json());
 
-// Health check route - IMPORTANT pentru Render
 app.get('/', (req, res) => {
   res.json({ 
     status: 'OK', 
@@ -30,19 +28,16 @@ app.get('/health', (req, res) => {
   res.json({ status: 'healthy' });
 });
 
-// Verificare variabile de mediu
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
   console.error('ERROR: SUPABASE_URL și SUPABASE_KEY trebuie configurate!');
   process.exit(1);
 }
 
-// Inițializare Supabase
 const supabase = createClient(
   process.env.SUPABASE_URL, 
   process.env.SUPABASE_KEY
 );
 
-// Get all tasks
 app.get('/api/tasks', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -58,7 +53,6 @@ app.get('/api/tasks', async (req, res) => {
   }
 });
 
-// Create a new task
 app.post('/api/tasks', async (req, res) => {
   try {
     const { title } = req.body;
@@ -80,7 +74,6 @@ app.post('/api/tasks', async (req, res) => {
   }
 });
 
-// Update a task
 app.put('/api/tasks/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -100,7 +93,6 @@ app.put('/api/tasks/:id', async (req, res) => {
   }
 });
 
-// Delete a task
 app.delete('/api/tasks/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -117,12 +109,10 @@ app.delete('/api/tasks/:id', async (req, res) => {
   }
 });
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
